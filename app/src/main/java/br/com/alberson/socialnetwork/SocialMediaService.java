@@ -1,8 +1,5 @@
 package br.com.alberson.socialnetwork;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.util.List;
 import java.util.Map;
 

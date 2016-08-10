@@ -27,7 +27,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class UserDetailsActivity extends AppCompatActivity {
-    private static final String BASE_URL = "http://192.168.1.26:3000/api/";
+    private static final String BASE_URL = "https://evo-social.herokuapp.com/api/";
     private TextView mUsername;
     private TextView mCategory;
     private RecyclerView mTimeline;
@@ -174,7 +174,7 @@ public class UserDetailsActivity extends AppCompatActivity {
             if (user != null) {
                 new ObterTimelineAsync(user.get_id()).execute();
                 mUsername.setText(user.getName());
-                mCategory.setText(user.getCategory());
+                mCategory.setText(user.getCategory().toUpperCase() + " USER");
                 Picasso.with(UserDetailsActivity.this)
                         .load("http://lorempixel.com/100/100/people?" + user.get_id())
                         .into(mImage);
@@ -197,7 +197,7 @@ public class UserDetailsActivity extends AppCompatActivity {
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
             SocialMediaService service = retrofit.create(SocialMediaService.class);
-            Call<List<Post>> call = service.getTimeline(userId, 0, 100);
+            Call<List<Post>> call = service.getTimeline(userId, 0, 1000);
             try {
                 Response<List<Post>> response = call.execute();
                 if (response.isSuccessful())

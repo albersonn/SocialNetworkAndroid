@@ -9,6 +9,14 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="br.com.alberson.socialnetwork.MainActivity">
 
+    <TextView
+      android:id="@+id/m_buscar"
+      android:gravity="center"
+      android:text="Busque um usuário para começar"
+      android:textSize="30sp"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent" />
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/friends"
         android:visibility="gone"
