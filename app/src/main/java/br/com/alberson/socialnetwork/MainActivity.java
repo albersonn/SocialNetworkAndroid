@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
   private ProgressBar mProgress;
   private UserResultsAdapter mAdapter;
   private TextView mTBusca;
+  private SearchView mSearchView;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +42,14 @@ public class MainActivity extends AppCompatActivity {
     mFriends = (RecyclerView) findViewById(R.id.friends);
     mProgress = (ProgressBar) findViewById(R.id.progress);
     mTBusca = (TextView) findViewById(R.id.m_buscar);
+
+    mTBusca.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        mSearchView.setIconified(false);
+        mSearchView.requestFocusFromTouch();
+      }
+    });
 
     mFriends.setHasFixedSize(true);
 
@@ -60,9 +69,9 @@ public class MainActivity extends AppCompatActivity {
 
     SearchManager searchManager =
       (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-    SearchView searchView =
+    mSearchView =
       (SearchView) menu.findItem(R.id.search).getActionView();
-    searchView.setSearchableInfo(
+    mSearchView.setSearchableInfo(
       searchManager.getSearchableInfo(getComponentName()));
 
     return true;
