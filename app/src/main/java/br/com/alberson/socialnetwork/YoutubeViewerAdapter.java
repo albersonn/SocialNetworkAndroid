@@ -1,8 +1,6 @@
 package br.com.alberson.socialnetwork;
 
 import android.app.Activity;
-import android.app.FragmentTransaction;
-import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,11 +14,9 @@ import com.google.android.youtube.player.YouTubePlayerFragment;
 import com.google.android.youtube.player.YouTubeThumbnailLoader;
 import com.google.android.youtube.player.YouTubeThumbnailView;
 
+import java.lang.ref.WeakReference;
 import java.util.List;
 
-/**
- * Created by alber on 12/08/2016.
- */
 public class YoutubeViewerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements YouTubePlayer.OnInitializedListener {
 
   private static final String YOUTUBE_KEY = "AIzaSyC3JPhKKVoLd1Z12xgFtLAgZW680Kbpg2s";
@@ -30,6 +26,8 @@ public class YoutubeViewerAdapter extends RecyclerView.Adapter<RecyclerView.View
     YoutubeViewerAdapter.this.player = youTubePlayer;
     player.setPlayerStyle(YouTubePlayer.PlayerStyle.MINIMAL);
     player.setPlayerStateChangeListener(new VideoListener());
+    player.cueVideo(currentVideo);
+    player.play();
   }
 
   @Override
@@ -41,30 +39,35 @@ public class YoutubeViewerAdapter extends RecyclerView.Adapter<RecyclerView.View
     YouTubeThumbnailView thumb;
     ImageView image;
     View fPlayer;
+    FrameLayout vg;
 
     public ViewHolder(View itemView) {
       super(itemView);
       thumb = (YouTubeThumbnailView) itemView.findViewById(R.id.y_thumbnail);
       image = (ImageView) itemView.findViewById(R.id.y_img);
       fPlayer = itemView.findViewById(R.id.y_fplayer);
+      vg = (FrameLayout) itemView.findViewById(R.id.y_vg);
     }
   }
 
   private final List<String> videos;
-  private final View playerView;
-  private final YouTubePlayerFragment playerFragment;
+  //  private final View playerView;
+//  private final YouTubePlayerFragment playerFragment;
   private YouTubePlayer player;
   private YouTubeThumbnailView currentThumb;
+  private final WeakReference<Activity> act;
+  private String currentVideo;
 
   public YoutubeViewerAdapter(List<String> videos, Activity act, ViewGroup vg) {
     this.videos = videos;
-    playerView = new FrameLayout(act);
-    playerView.setId(R.id.player_view);
-    playerView.setVisibility(View.INVISIBLE);
-    vg.addView(playerView);
-    playerFragment = YouTubePlayerFragment.newInstance();
-    playerFragment.initialize(YOUTUBE_KEY, this);
-    act.getFragmentManager().beginTransaction().add(R.id.player_view, playerFragment).commit();
+//    playerView = new FrameLayout(act);
+//    playerView.setId(R.id.player_view);
+//    playerView.setVisibility(View.INVISIBLE);
+//    vg.addView(playerView);
+//    playerFragment = YouTubePlayerFragment.newInstance();
+//    playerFragment.initialize(YOUTUBE_KEY, this);
+//    act.getFragmentManager().beginTransaction().add(R.id.player_view, playerFragment).commit();
+    this.act = new WeakReference<>(act);
   }
 
   @Override
@@ -90,17 +93,20 @@ public class YoutubeViewerAdapter extends RecyclerView.Adapter<RecyclerView.View
             mHolder.thumb.setOnClickListener(new View.OnClickListener() {
               @Override
               public void onClick(View v) {
-                if(player != null) {
-                  if(currentThumb != null)
-                    currentThumb.setVisibility(View.VISIBLE);
-                  currentThumb = (YouTubeThumbnailView)v;
-                  currentThumb.setVisibility(View.INVISIBLE);
-                  playerView.setX(v.getX());
-                  playerView.setY(v.getY());
-                  playerView.setVisibility(View.VISIBLE);
-                  player.cueVideo(videos.get(mHolder.getAdapterPosition()));
-                  player.play();
-                }
+                YouTubePlayerFragment playerFragment = YouTubePlayerFragment.newInstance();
+                playerFragment.initialize(YOUTUBE_KEY, YoutubeViewerAdapter.this);
+//                if(player != null) {
+                if (currentThumb != null)
+                  currentThumb.setVisibility(View.VISIBLE);
+                act.get().getFragmentManager().beginTransaction().replace(mHolder.vg.getId(), playerFragment).commit();
+                currentThumb = (YouTubeThumbnailView) v;
+                currentThumb.setVisibility(View.INVISIBLE);
+//                  playerView.setX(v.getX());
+//                  playerView.setY(v.getY());
+//                  playerView.setVisibility(View.VISIBLE);
+                currentVideo = videos.get(mHolder.getAdapterPosition());
+//                player.play();
+//                }
               }
             });
           }
@@ -124,7 +130,7 @@ public class YoutubeViewerAdapter extends RecyclerView.Adapter<RecyclerView.View
     return videos == null ? 0 : videos.size();
   }
 
-  private final class VideoListener implements YouTubePlayer.PlayerStateChangeListener{
+  private final class VideoListener implements YouTubePlayer.PlayerStateChangeListener {
 
     @Override
     public void onLoading() {
