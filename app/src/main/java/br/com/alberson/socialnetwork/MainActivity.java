@@ -13,10 +13,24 @@ import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.youtube.YouTube;
+import com.google.api.services.youtube.model.SearchListResponse;
+import com.google.api.services.youtube.model.SearchResult;
+
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -33,15 +47,47 @@ public class MainActivity extends AppCompatActivity {
   private UserResultsAdapter mAdapter;
   private TextView mTBusca;
   private SearchView mSearchView;
+  private Switch mSYoutube;
+  private boolean isYoutube = false;
+
+  /**
+   * Global instance of the HTTP transport.
+   */
+  private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+
+  /**
+   * Global instance of the JSON factory.
+   */
+  private static final JsonFactory JSON_FACTORY = new JacksonFactory();
+
+  private YouTube youtube;
+  private RelativeLayout mRelativeLayout;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
+    mRelativeLayout = (RelativeLayout) findViewById(R.id.m_viewgroup);
+
+    youtube = new YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY, new HttpRequestInitializer() {
+      @Override
+      public void initialize(HttpRequest request) throws IOException {
+
+      }
+    }).setApplicationName("Test").build();
+
     mFriends = (RecyclerView) findViewById(R.id.friends);
     mProgress = (ProgressBar) findViewById(R.id.progress);
     mTBusca = (TextView) findViewById(R.id.m_buscar);
+    mSYoutube = (Switch) findViewById(R.id.m_switchyoutube);
+
+    mSYoutube.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+      @Override
+      public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        isYoutube = isChecked;
+      }
+    });
 
     mTBusca.setOnClickListener(new View.OnClickListener() {
       @Override
@@ -87,8 +133,56 @@ public class MainActivity extends AppCompatActivity {
     if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
       String query = intent.getStringExtra(SearchManager.QUERY);
       if (!TextUtils.isEmpty(query)) {
-        new BuscarUsuariosAsync(query).execute();
+        if (!isYoutube) {
+          new BuscarUsuariosAsync(query).execute();
+        } else {
+          new BuscarVideoYoutubeAsync(query).execute();
+        }
       }
+    }
+  }
+
+  private class BuscarVideoYoutubeAsync extends AsyncTask<Void, Void, List<SearchResult>> {
+
+    private final String query;
+
+    private BuscarVideoYoutubeAsync(String query) {
+      this.query = query;
+    }
+
+    @Override
+    protected List<SearchResult> doInBackground(Void... params) {
+      try {
+        YouTube.Search.List search = youtube.search().list("id,snippet");
+        search.setKey("AIzaSyCEW-3YcmzdjK1D8CjL68LaUXxZ1pwej30");
+        search.setQ(query);
+        search.setType("video");
+
+        search.setFields("items(id/kind,id/videoId)");
+        search.setMaxResults(10l);
+        SearchListResponse response = search.execute();
+        return response.getItems();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      return null;
+    }
+
+    @Override
+    protected void onPostExecute(List<SearchResult> response) {
+      List<String> items = new ArrayList<>();
+      if (response != null) {
+        for (SearchResult result : response) {
+          items.add(result.getId().getVideoId());
+        }
+      }
+      YoutubeViewerAdapter adapter = new YoutubeViewerAdapter(items, MainActivity.this, mRelativeLayout);
+      mTBusca.setVisibility(View.GONE);
+      mSYoutube.setVisibility(View.GONE);
+
+      mFriends.setVisibility(View.VISIBLE);
+      mFriends.setAdapter(adapter);
+      mProgress.setVisibility(View.GONE);
     }
   }
 

@@ -31,7 +31,7 @@
                 <action android:name="android.intent.action.SEARCH" />
             </intent-filter>
         </activity>
-        <activity android:name=".UserDetailsActivity"></activity>
+        <activity android:name=".UserDetailsActivity" />
     </application>
 
 </manifest>
