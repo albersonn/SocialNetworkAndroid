@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
   private TextView mTBusca;
   private SearchView mSearchView;
   private Switch mSYoutube;
-  private boolean isYoutube = false;
+  private boolean isYoutube = true;
 
   /**
    * Global instance of the HTTP transport.

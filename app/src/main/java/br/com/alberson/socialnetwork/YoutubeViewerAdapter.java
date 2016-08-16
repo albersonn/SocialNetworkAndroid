@@ -14,7 +14,6 @@ import com.google.android.youtube.player.YouTubePlayerFragment;
 import com.google.android.youtube.player.YouTubeThumbnailLoader;
 import com.google.android.youtube.player.YouTubeThumbnailView;
 
-import java.lang.ref.WeakReference;
 import java.util.List;
 
 public class YoutubeViewerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements YouTubePlayer.OnInitializedListener {
@@ -26,8 +25,6 @@ public class YoutubeViewerAdapter extends RecyclerView.Adapter<RecyclerView.View
     YoutubeViewerAdapter.this.player = youTubePlayer;
     player.setPlayerStyle(YouTubePlayer.PlayerStyle.MINIMAL);
     player.setPlayerStateChangeListener(new VideoListener());
-    player.cueVideo(currentVideo);
-    player.play();
   }
 
   @Override
@@ -51,23 +48,23 @@ public class YoutubeViewerAdapter extends RecyclerView.Adapter<RecyclerView.View
   }
 
   private final List<String> videos;
-  //  private final View playerView;
-//  private final YouTubePlayerFragment playerFragment;
+  private final View playerView;
   private YouTubePlayer player;
-  private YouTubeThumbnailView currentThumb;
-  private final WeakReference<Activity> act;
+  private ViewGroup currentView;
   private String currentVideo;
+  private ViewGroup baseViewGroup;
 
   public YoutubeViewerAdapter(List<String> videos, Activity act, ViewGroup vg) {
     this.videos = videos;
-//    playerView = new FrameLayout(act);
-//    playerView.setId(R.id.player_view);
-//    playerView.setVisibility(View.INVISIBLE);
-//    vg.addView(playerView);
-//    playerFragment = YouTubePlayerFragment.newInstance();
-//    playerFragment.initialize(YOUTUBE_KEY, this);
-//    act.getFragmentManager().beginTransaction().add(R.id.player_view, playerFragment).commit();
-    this.act = new WeakReference<>(act);
+    playerView = new FrameLayout(act);
+    playerView.setId(R.id.player_view);
+    playerView.setVisibility(View.INVISIBLE);
+    vg.addView(playerView);
+    YouTubePlayerFragment playerFragment = YouTubePlayerFragment.newInstance();
+    playerFragment.initialize(YOUTUBE_KEY, this);
+    act.getFragmentManager().beginTransaction().add(R.id.player_view, playerFragment).commit();
+    playerView.setTag("YT_PLAYER");
+    baseViewGroup = vg;
   }
 
   @Override
@@ -80,6 +77,7 @@ public class YoutubeViewerAdapter extends RecyclerView.Adapter<RecyclerView.View
   public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
     final ViewHolder mHolder = (ViewHolder) holder;
     mHolder.image.setVisibility(View.VISIBLE);
+    mHolder.vg.setId(View.generateViewId());
 
     mHolder.thumb.initialize(YOUTUBE_KEY, new YouTubeThumbnailView.OnInitializedListener() {
       @Override
@@ -93,18 +91,34 @@ public class YoutubeViewerAdapter extends RecyclerView.Adapter<RecyclerView.View
             mHolder.thumb.setOnClickListener(new View.OnClickListener() {
               @Override
               public void onClick(View v) {
-                YouTubePlayerFragment playerFragment = YouTubePlayerFragment.newInstance();
-                playerFragment.initialize(YOUTUBE_KEY, YoutubeViewerAdapter.this);
-//                if(player != null) {
-                if (currentThumb != null)
-                  currentThumb.setVisibility(View.VISIBLE);
-                act.get().getFragmentManager().beginTransaction().replace(mHolder.vg.getId(), playerFragment).commit();
-                currentThumb = (YouTubeThumbnailView) v;
-                currentThumb.setVisibility(View.INVISIBLE);
-//                  playerView.setX(v.getX());
-//                  playerView.setY(v.getY());
-//                  playerView.setVisibility(View.VISIBLE);
+
+                if (currentView != null) {
+                  if (currentView.findViewWithTag("YT_PLAYER") != null)
+                    currentView.removeView(playerView);
+                } else {
+                  baseViewGroup.removeView(playerView);
+                }
+                currentView = mHolder.vg;
+                mHolder.vg.addView(playerView);
+                playerView.setVisibility(View.VISIBLE);
+//                YouTubePlayerFragment ytPlayer = (YouTubePlayerFragment) act.get().getFragmentManager().findFragmentByTag("YT_PLAYER");
+//                if(ytPlayer == null) {
+//                  ytPlayer = YouTubePlayerFragment.newInstance();
+//                  ytPlayer.initialize(YOUTUBE_KEY, YoutubeViewerAdapter.this);
+//                } else {
+//                  act.get().getFragmentManager().beginTransaction().remove(ytPlayer).commit();
+//                }
+//                FragmentTransaction t = act.get().getFragmentManager().beginTransaction();
+//                t.replace(mHolder.vg.getId(), ytPlayer, "YT_PLAYER");
+//                t.commit();
+////                t.replace(mHolder.vg.getId(), playerFragment).commit();
+//                currentThumb = (YouTubeThumbnailView) v;
+//                currentThumb.setVisibility(View.INVISIBLE);
+////                  playerView.setX(v.getX());
+////                  playerView.setY(v.getY());
+////                  playerView.setVisibility(View.VISIBLE);
                 currentVideo = videos.get(mHolder.getAdapterPosition());
+                player.cueVideo(currentVideo);
 //                player.play();
 //                }
               }

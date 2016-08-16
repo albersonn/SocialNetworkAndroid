@@ -16,6 +16,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:focusable="true"
+        android:checked="true"
         android:padding="8dp"
         android:text="Youtube  " />
 
