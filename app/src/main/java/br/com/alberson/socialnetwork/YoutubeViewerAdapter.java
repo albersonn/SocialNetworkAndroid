@@ -99,8 +99,9 @@ public class YoutubeViewerAdapter extends RecyclerView.Adapter<RecyclerView.View
                   baseViewGroup.removeView(playerView);
                 }
                 currentView = mHolder.vg;
-                mHolder.vg.addView(playerView);
+                mHolder.vg.addView(playerView, new ViewGroup.LayoutParams(mHolder.vg.getLayoutParams().width, ViewGroup.LayoutParams.WRAP_CONTENT));
                 playerView.setVisibility(View.VISIBLE);
+
 //                YouTubePlayerFragment ytPlayer = (YouTubePlayerFragment) act.get().getFragmentManager().findFragmentByTag("YT_PLAYER");
 //                if(ytPlayer == null) {
 //                  ytPlayer = YouTubePlayerFragment.newInstance();
